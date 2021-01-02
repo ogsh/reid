@@ -1,13 +1,12 @@
 from pathlib import Path
 from util.io import save_pickle
 import pandas as pd
-
+import tensorflow as tf
 
 def make_v47_gt(dir_root, path_gt):
     gt = pd.read_csv(path_gt, sep="\s+")
     all_gts = []
     for idx, data in gt.iterrows():
-        print(idx, data)
         label = data["Image_No"]
         lty = data["Start_Row"]
         rby = data["End_Row"]
@@ -15,15 +14,13 @@ def make_v47_gt(dir_root, path_gt):
         rbx = data["End_Col"]
         tmp = str(path_gt).replace(str(dir_root), "").replace("Bounding Box", "Images").replace("\\", "/").replace(".txt", "")[1:]
         path_img = tmp + "/" + str(label) + ".bmp"
-        cx = 0.5 * (ltx + rbx)
-        cy = 0.5 * (lty + rby)
-        w = rbx - ltx
-        h = rby - lty
+        path_img = str(path_img)
         bb = [ltx, lty, rbx, rby]
 
         gt = {
             "img_name": path_img,
-            "bb": bb}
+            "bb": bb,
+            "label": label}
 
         all_gts += [gt]
 
@@ -36,7 +33,9 @@ def make_v47_dataset(dir_root, path_out):
 
     all_gts = []
     for path_gt in path_gts:
-        all_gts += make_v47_gt(dir_root, path_gt)
+        gts = make_v47_gt(dir_root, path_gt)
+        print(gts)
+        all_gts += gts
 
     save_pickle(path_out, all_gts)
 

@@ -1,0 +1,28 @@
+train:
+  epochs: 10000
+
+dataset:
+  img_size: [64, 64]
+  batch_size: 16
+  scale: 0.1
+  shift: 0.
+
+  data:
+    -
+      dir_root: "../dataset/v47"
+      path: "../dataset/v47/v47.pkl"
+
+log:
+  interval_to_write_image: 100
+
+criterion:
+  type: SparseCategoricalCrossEntropy
+  kwargs:
+    from_logits: True
+
+optimizer:
+  type: Adam
+  kwargs:
+    learning_rate: 0.000001
+
+
