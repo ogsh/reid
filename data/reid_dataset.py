@@ -17,7 +17,7 @@ class ImageLoader:
         data["path_img"] = path_img
         img = load_image(path_img)
         data["img"] = img
-        data["label"] = data["label"] - 1
+        data["label"] = data["label"]
 
         return data
 
@@ -53,6 +53,8 @@ class ImagePreprocessor:
                                         scale=self._scale,
                                         shift=self._shift,
                                         out_size=self._image_size)
+
+        img = img / 255.0
 
         data["img"] = img[0, :]
 
