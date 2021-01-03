@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, MaxPool2D
 
 
@@ -91,6 +92,37 @@ class DepthwiseSeparableConv(tf.keras.Model):
         return y
 
 
+class SpatialConcat(tf.keras.Model):
+    def __init__(self, index_to_align_size):
+        super(SpatialConcat, self).__init__()
+        self._index_to_align_size = index_to_align_size
+        self._pooling = tf.keras.layers.AveragePooling2D()
+
+    def _pool(self, x, output_size):
+        h_x = tf.shape(x)[1]
+        h_target = output_size[0]
+        n_pool = tf.experimental.numpy.log2(h_x / h_target)
+        xshape = x.get_shape()
+        out = x
+        for _ in tf.range(n_pool):
+            tf.autograph.experimental.set_loop_options(
+                shape_invariants=[(out,
+                                  tf.TensorShape([xshape[0],
+                                                  None,
+                                                  None,
+                                                  xshape[-1]]))])
+            out = self._pooling(out)
+
+        return out
+
+    def call(self, xs, training=None, mask=None):
+        output_size = tf.shape(xs[self._index_to_align_size])[1:3]
+        xs = [self._pool(x, output_size) for x in xs]
+        out = tf.concat(xs, axis=-1)
+
+        return out
+
+
 def resblock3x3(in_channels, out_channels):
     layer = ResBlock(in_channels=in_channels,
                      out_channels=out_channels,
@@ -125,5 +157,11 @@ def gap(in_channels):
 
 def dense(in_channels, out_channels):
     layer = tf.keras.layers.Dense(units=out_channels)
+
+    return layer
+
+
+def spatial_concat(in_channels, out_channels, index_to_align_size):
+    layer = SpatialConcat(index_to_align_size)
 
     return layer

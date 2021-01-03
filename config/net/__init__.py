@@ -1,6 +1,7 @@
 from util.io import load_yaml
 import os
 from model.parser import parse_model
+from model.feedforwardnet import FeedforwardNet
 
 
 def load_net_config(name):
@@ -14,6 +15,6 @@ def load_net_config(name):
 
 def generate_net(in_channels, name):
     config = load_net_config(name)
-    net = parse_model(in_channels, config)
+    net = FeedforwardNet(in_channels, config)
 
     return net

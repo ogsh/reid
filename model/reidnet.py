@@ -7,8 +7,9 @@ class ReIDNet(tf.keras.Model):
     def __init__(self, in_channels, backbone, classifier):
         super(ReIDNet, self).__init__()
 
-        self._backbone, channels = generate_net(in_channels, backbone)
-        self._classifier, self._out_channels = generate_net(channels, classifier)
+        self._backbone = generate_net(in_channels, backbone)
+        self._classifier = generate_net(self._backbone.out_channels, classifier)
+        self._out_channels = self._classifier.out_channels
 
     def call(self, x, training=None, mask=None):
         base_feature = self._backbone(x)

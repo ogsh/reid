@@ -4,5 +4,5 @@ model:
   type: ReIDNet
   kwargs:
     in_channels: 3
-    backbone: resnet
+    backbone: pyramidresnet
     classifier: reid47
