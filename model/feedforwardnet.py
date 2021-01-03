@@ -17,7 +17,10 @@ class FeedforwardNet(tf.keras.Model):
                 out = layer["module"](out)
                 out_dict[name] = out
             else:
-                this_in_layers = [out_dict[l] for l in layer["in_layers"]]
+                if isinstance(layer["in_layers"], list):
+                    this_in_layers = [out_dict[l] for l in layer["in_layers"]]
+                else:
+                    this_in_layers = out_dict[layer["in_layers"]]
                 out = layer["module"](this_in_layers)
                 out_dict[name] = out
 

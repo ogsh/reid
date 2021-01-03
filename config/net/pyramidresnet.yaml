@@ -30,17 +30,14 @@ layers:
     kwargs: {out_channels: 256}
   conv6:
     type: resblock3x3
-    kwargs: {out_channels: 512}
+    kwargs: {out_channels: 256}
   pool5:
     type: maxpool2x2
     kwargs:
   conv7:
     type: resblock3x3
-    kwargs: {out_channels: 1024}
-  concat1:
-    type: spatial_concat
+    kwargs: {out_channels: 512}
+  gap1:
+    type: pyramid_gap
     in_layers: [pool2, pool3, pool4, conv7]
-    kwargs: {out_channels: 1248, index_to_align_size: -1}
-  pool6:
-    type: gap
-    kwargs:
+    kwargs: {out_channels: 736}

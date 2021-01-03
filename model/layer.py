@@ -123,6 +123,18 @@ class SpatialConcat(tf.keras.Model):
         return out
 
 
+class PyramidGAP(tf.keras.Model):
+    def __init__(self):
+        super(PyramidGAP, self).__init__()
+        self._gap = tf.keras.layers.GlobalAveragePooling2D()
+
+    def call(self, xs, training=None, mask=None):
+        xs = [self._gap(x) for x in xs]
+        out = tf.concat(xs, axis=-1)
+
+        return out
+
+
 def resblock3x3(in_channels, out_channels):
     layer = ResBlock(in_channels=in_channels,
                      out_channels=out_channels,
@@ -163,5 +175,11 @@ def dense(in_channels, out_channels):
 
 def spatial_concat(in_channels, out_channels, index_to_align_size):
     layer = SpatialConcat(index_to_align_size)
+
+    return layer
+
+
+def pyramid_gap(in_channels, out_channels):
+    layer = PyramidGAP()
 
     return layer
