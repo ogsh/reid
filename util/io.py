@@ -18,7 +18,7 @@ def save_pickle(path, data):
 
 def load_yaml(path):
     with open(path, "r") as f:
-        data = yaml.load(f)
+        data = yaml.load(f, Loader=yaml.SafeLoader)
 
     data = Box(data)
 

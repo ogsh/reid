@@ -1,0 +1,8 @@
+name: reidnet
+
+model:
+  type: ReIDNet
+  kwargs:
+    in_channels: 3
+    backbone: resnet
+    classifier: reid47

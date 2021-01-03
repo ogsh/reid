@@ -12,12 +12,14 @@ from functools import partial
 from pathlib import Path
 from util.io import load_yaml
 from train.optimizer import generate_optimizer
+from model.model_generator import generate_model
 
 
 def generate_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir_log", type=str, default="../log")
     parser.add_argument("--path_config", type=Path, default="../config/train/config_train.yaml")
+    parser.add_argument("--path_model_config", type=Path, default="../config/model/model1.yaml")
 
     return parser
 
@@ -43,8 +45,8 @@ def train_reid(args):
 
     dataset = dataset.dataset
 
-    model = ResNet(in_channels=3,
-                   out_channels=47)
+    config_model = load_yaml(args.path_model_config)
+    model = generate_model(config_model.model.type, config_model.model.kwargs)
 
     criterion = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     summary_writer = SummaryWriterReID(dir_log=dir_log,

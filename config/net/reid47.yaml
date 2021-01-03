@@ -1,0 +1,6 @@
+name: classifier
+
+layers:
+  dense1:
+    type: dense
+    kwargs: {out_channels: 47}

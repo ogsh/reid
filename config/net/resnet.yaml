@@ -1,0 +1,42 @@
+name: resnet
+
+layers:
+  conv1:
+    type: conv3x3
+    kwargs: {out_channels: 16, strides: 1, padding: SAME, groups: 1}
+  pool1:
+    type: maxpool2x2
+    kwargs:
+  conv2:
+    type: resblock3x3
+    kwargs: {out_channels: 32}
+  pool2:
+    type: maxpool2x2
+    kwargs:
+  conv3:
+    type: resblock3x3
+    kwargs: {out_channels: 64}
+  pool3:
+    type: maxpool2x2
+    kwargs:
+  conv4:
+    type: resblock3x3
+    kwargs: {out_channels: 128}
+  pool4:
+    type: maxpool2x2
+    kwargs:
+  conv5:
+    type: resblock3x3
+    kwargs: {out_channels: 256}
+  conv6:
+    type: resblock3x3
+    kwargs: {out_channels: 512}
+  pool5:
+    type: maxpool2x2
+    kwargs:
+  conv7:
+    type: resblock3x3
+    kwargs: {out_channels: 1024}
+  pool6:
+    type: gap
+    kwargs:

@@ -91,22 +91,39 @@ class DepthwiseSeparableConv(tf.keras.Model):
         return y
 
 
-class Feedforward(tf.keras.Model):
-    def __init__(self):
-        super(Feedforward, self).__init__()
-        self._conv1 = ConvBNReLU(16, 3, 1, "SAME", 1)
-        self._pool1 = MaxPool2D(pool_size=(2, 2))
-        self._conv2 = ConvBNReLU(32, 3, 1, "SAME", 1)
-        self._pool2 = MaxPool2D(pool_size=(2, 2))
-        self._conv3 = ConvBNReLU(64, 3, 1, "SAME", 1)
+def resblock3x3(in_channels, out_channels):
+    layer = ResBlock(in_channels=in_channels,
+                     out_channels=out_channels,
+                     kernel_size=3,
+                     strides=1,
+                     padding="SAME")
 
-    def call(self, x, training=None, mask=None):
-        y = self._conv1(x)
-        y = self._pool1(y)
-        y = self._conv2(y)
-        y = self._pool2(y)
-        y = self._conv3(y)
-
-        return y
+    return layer
 
 
+def conv3x3(in_channels, out_channels, strides, padding, groups):
+    layer = conv2d(filters=out_channels,
+                   kernel_size=3,
+                   strides=strides,
+                   padding=padding,
+                   groups=groups)
+
+    return layer
+
+
+def maxpool2x2(in_channels):
+    layer = MaxPool2D(pool_size=2)
+
+    return layer
+
+
+def gap(in_channels):
+    layer = tf.keras.layers.GlobalAveragePooling2D()
+
+    return layer
+
+
+def dense(in_channels, out_channels):
+    layer = tf.keras.layers.Dense(units=out_channels)
+
+    return layer
