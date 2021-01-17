@@ -1,19 +1,33 @@
 train:
-  epochs: 10000
+  epochs: 100000
+
+chkpt_manager:
+  kwargs:
+    max_to_keep: 10
+    interval_to_save: 1000
 
 dataset:
-  img_size: [64, 64]
-  batch_size: 16
+  img_size: [32, 64]
+  batch_size: 32
   scale: 0.1
   shift: 0.
-
   data:
     -
       dir_root: "../dataset/v47"
       path: "../dataset/v47/v47.pkl"
 
+augmentation:
+  p_contrast: 0.2
+  contrast: 0.2
+  p_brightness: 0.2
+  brightness: 0.2
+  p_rotation: 0.3
+  rotation: 0.05
+  p_saturation: 0.2
+  saturation: [0.8, 1.2]
+
 log:
-  interval_to_write_image: 100
+  interval_to_write_image: 1000
 
 criterion:
   type: SparseCategoricalCrossEntropy
@@ -23,6 +37,7 @@ criterion:
 optimizer:
   type: Adam
   kwargs:
-    learning_rate: 0.000001
+    learning_rate: 0.0002
+
 
 

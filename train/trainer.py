@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tqdm import tqdm
 from util.number import MovingAverage
+from train.checkpoint_manager import CheckpointManager
 
 
 def train_each_iteration(data, model, criterion):
@@ -20,17 +21,21 @@ class Trainer:
                  model: tf.keras.Model,
                  criterion,
                  optimizer: tf.keras.optimizers.Optimizer,
-                 summary_writer):
+                 summary_writer,
+                 chkpt_manager,
+                 start_iter):
         self._dataset = dataset
         self._model = model
         self._criterion = criterion
         self._epochs = epochs
         self._optimizer = optimizer
         self._summary_writer = summary_writer
+        self._chkpt_manager = chkpt_manager
+        self._start_iter = start_iter
 
     def train(self):
         loss_average = MovingAverage()
-        iter = 0
+        current_iter = self._start_iter + 1
         for epoch in range(self._epochs):
             with tqdm(enumerate(self._dataset)) as loop_status:
                 for step, data in loop_status:
@@ -41,5 +46,6 @@ class Trainer:
                     loss_average.update(loss_value)
                     loop_status.postfix = "loss:" + str(float(loss_average.val))
 
-                    self._summary_writer.write(iter, self._model, data, loss_value)
-                    iter += 1
+                    self._chkpt_manager.save(current_iter)
+                    self._summary_writer.write(current_iter, self._model, data, loss_value)
+                    current_iter += 1

@@ -4,8 +4,8 @@ from config.net import generate_net
 
 
 class ReIDNet(tf.keras.Model):
-    def __init__(self, in_channels, backbone, classifier):
-        super(ReIDNet, self).__init__()
+    def __init__(self, in_channels, backbone, classifier, name):
+        super(ReIDNet, self).__init__(name=name)
 
         self._backbone = generate_net(in_channels, backbone)
         self._classifier = generate_net(self._backbone.out_channels, classifier)

@@ -1,0 +1,8 @@
+
+model:
+  type: ReIDNet
+  kwargs:
+    name: presmobile14_reid47
+    in_channels: 3
+    backbone: presmobile14
+    classifier: reid47

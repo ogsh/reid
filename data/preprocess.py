@@ -17,10 +17,16 @@ def random_scale_shift_bboxes(bboxes, scale, shift):
     scales = power2_radom_uniform(shape=sizes.shape, maxval=scale, minval=-scale)
     sizes = sizes * scales
 
-    ltxs = cxs - sizes[:, 0] * 0.5
-    ltys = cys - sizes[:, 1] * 0.5
-    rbxs = cxs + sizes[:, 0] * 0.5
-    rbys = cys + sizes[:, 1] * 0.5
+    centers = tf.concat([cxs, cys], axis=1)
+    shifts = tf.random.uniform(shape=sizes.shape, maxval=shift, minval=-shift)
+    centers += shifts
+
+    half_sizes = 0.5 * sizes
+
+    ltxs = centers[:, 0:1] - half_sizes[:, 0:1]
+    ltys = centers[:, 1:] - half_sizes[:, 1:]
+    rbxs = centers[:, 0:1] + half_sizes[:, 0:1]
+    rbys = centers[:, 1:] + half_sizes[:, 1:]
 
     dst = tf.concat([ltxs, ltys, rbxs, rbys], axis=1)
 

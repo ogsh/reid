@@ -1,4 +1,4 @@
-name: pyramidresnet
+name: presmobile14
 
 layers:
   scale1:
@@ -11,35 +11,35 @@ layers:
     type: maxpool2x2
     kwargs:
   conv2:
-    type: resblock3x3
-    kwargs: {out_channels: 32}
+    type: resmobile3x3
+    kwargs: {out_channels: 32, strides: 1}
   pool2:
     type: maxpool2x2
     kwargs:
   conv3:
-    type: resblock3x3
-    kwargs: {out_channels: 64}
+    type: resmobile3x3
+    kwargs: {out_channels: 64, strides: 1}
   pool3:
     type: maxpool2x2
     kwargs:
   conv4:
-    type: resblock3x3
-    kwargs: {out_channels: 128}
+    type: resmobile3x3
+    kwargs: {out_channels: 128, strides: 1}
   pool4:
     type: maxpool2x2
     kwargs:
   conv5:
-    type: resblock3x3
-    kwargs: {out_channels: 256}
+    type: resmobile3x3
+    kwargs: {out_channels: 256, strides: 1}
   conv6:
-    type: resblock3x3
-    kwargs: {out_channels: 256}
+    type: resmobile3x3
+    kwargs: {out_channels: 256, strides: 1}
   pool5:
     type: maxpool2x2
     kwargs:
   conv7:
-    type: resblock3x3
-    kwargs: {out_channels: 512}
+    type: resmobile3x3
+    kwargs: {out_channels: 512, strides: 1}
   gap1:
     type: pyramid_gap
     in_layers: [pool2, pool3, pool4, conv7]

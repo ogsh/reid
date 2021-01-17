@@ -1,14 +1,11 @@
 import tensorflow as tf
 from model.layer import (conv2d, resblock3x3, conv3x3, maxpool2x2, gap, dense,
-                         spatial_concat, pyramid_gap)
+                         spatial_concat, pyramid_gap, resmobile3x3, rescale)
 from collections import OrderedDict
 
 
 def _get_module(module_name):
-    modules = [conv2d, resblock3x3, conv3x3, maxpool2x2,
-               gap, dense, spatial_concat, pyramid_gap]
-    module_dict = {m.__name__: m for m in modules}
-    module = module_dict[module_name]
+    module = globals()[module_name]
 
     return module
 

@@ -1,8 +1,7 @@
-name: reidnet
-
 model:
   type: ReIDNet
   kwargs:
+    name: pyramidresnet_reid47
     in_channels: 3
     backbone: pyramidresnet
     classifier: reid47

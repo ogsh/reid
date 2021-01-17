@@ -1,6 +1,5 @@
 import tensorflow as tf
-import numpy as np
-from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, MaxPool2D
+from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, MaxPool2D, DepthwiseConv2D
 
 
 def conv2d(filters, kernel_size, strides, padding, groups):
@@ -10,27 +9,66 @@ def conv2d(filters, kernel_size, strides, padding, groups):
                   padding=padding,
                   groups=groups,
                   use_bias=False,
-                  kernel_initializer=tf.initializers.he_normal)
+                  kernel_initializer=tf.initializers.he_normal())
 
 
-class ConvBNReLU(tf.keras.Model):
-    def __init__(self, filters, kernel_size, strides, padding, groups):
-        super(ConvBNReLU, self).__init__()
-        self._conv = conv2d(filters=filters,
-                            kernel_size=kernel_size,
-                            strides=strides,
-                            padding=padding,
-                            groups=groups)
+def depthise_conv2d(kernel_size, strides, padding):
+    return DepthwiseConv2D(kernel_size=kernel_size,
+                           strides=strides,
+                           padding=padding,
+                           use_bias=False,
+                           depthwise_initializer=tf.initializers.he_normal())
 
-        self._bn = BatchNormalization()
-        self._relu = ReLU()
+
+class SequentialModel(tf.keras.Model):
+    def __init__(self, *args, **kwargs):
+        super(SequentialModel, self).__init__(args, kwargs)
+        self._seq = None
 
     def call(self, x, training=None, mask=None):
-        y = self._conv(x)
-        y = self._bn(y, training)
-        y = self._relu(y)
+        out = self._seq(x, training=training, mask=mask)
 
-        return y
+        return out
+
+
+class ConvBNAct(SequentialModel):
+    def __init__(self, filters, kernel_size, strides, padding, groups, act):
+        super(ConvBNAct, self).__init__()
+        self._seq = tf.keras.Sequential(name="ConvBnAct")
+
+        self._seq.add(conv2d(filters=filters,
+                             kernel_size=kernel_size,
+                             strides=strides,
+                             padding=padding,
+                             groups=groups))
+
+        self._seq.add(BatchNormalization())
+
+        if act is not None:
+            self._seq.add(act)
+
+
+class ConvBNReLU(ConvBNAct):
+    def __init__(self, filters, kernel_size, strides, padding, groups):
+        super(ConvBNReLU, self).__init__(filters=filters,
+                                         kernel_size=kernel_size,
+                                         strides=strides,
+                                         padding=padding,
+                                         groups=groups,
+                                         act=ReLU())
+
+
+class DepthwiseConvBNReLU(SequentialModel):
+    def __init__(self, kernel_size, strides, padding):
+        super(DepthwiseConvBNReLU, self).__init__()
+        conv = tf.keras.layers.DepthwiseConv2D(kernel_size=kernel_size,
+                                               strides=strides,
+                                               padding=padding,
+                                               use_bias=False,
+                                               depthwise_initializer=tf.keras.initializers.he_normal())
+        bn = BatchNormalization()
+        relu = ReLU()
+        self._seq = tf.keras.Sequential(layers=[conv, bn, relu], name="DepthwiseConvBNReLU")
 
 
 def add_residual(x, residual):
@@ -47,14 +85,14 @@ def add_residual(x, residual):
 
 
 class ResBlock(tf.keras.Model):
-    def __init__(self, in_channels, out_channels, kernel_size, strides, padding):
+    def __init__(self, conv1, conv2):
         super(ResBlock, self).__init__()
         self._bn1 = BatchNormalization()
-        self._conv1 = conv2d(out_channels, kernel_size=kernel_size, strides=strides, padding=padding, groups=1)
+        self._conv1 = conv1
         self._relu1 = ReLU()
 
         self._bn2 = BatchNormalization()
-        self._conv2 = conv2d(out_channels, kernel_size=kernel_size, strides=strides, padding=padding, groups=1)
+        self._conv2 = conv2
         self._relu2 = ReLU()
 
     def call(self, x, training=None, mask=None):
@@ -69,6 +107,22 @@ class ResBlock(tf.keras.Model):
         y = add_residual(y, residual)
 
         return y
+
+
+class ResConv(ResBlock):
+    def __init__(self, in_channels, out_channels, kernel_size, strides):
+        conv1 = conv2d(out_channels, kernel_size=kernel_size, strides=strides, padding="SAME", groups=1)
+        conv2 = conv2d(out_channels, kernel_size=kernel_size, strides=strides, padding="SAME", groups=1)
+
+        super(ResConv, self).__init__(conv1=conv1, conv2=conv2)
+
+
+class ResidualMobile(ResBlock):
+    def __init__(self, in_channels, out_channels, kernel_size, strides):
+        conv1 = depthise_conv2d(kernel_size=kernel_size, strides=strides, padding="SAME")
+        conv2 = conv2d(filters=out_channels, kernel_size=1, strides=1, padding="SAME", groups=1)
+
+        super(ResidualMobile, self).__init__(conv1=conv1, conv2=conv2)
 
 
 class DepthwiseSeparableConv(tf.keras.Model):
@@ -107,10 +161,10 @@ class SpatialConcat(tf.keras.Model):
         for _ in tf.range(n_pool):
             tf.autograph.experimental.set_loop_options(
                 shape_invariants=[(out,
-                                  tf.TensorShape([xshape[0],
-                                                  None,
-                                                  None,
-                                                  xshape[-1]]))])
+                                   tf.TensorShape([xshape[0],
+                                                   None,
+                                                   None,
+                                                   xshape[-1]]))])
             out = self._pooling(out)
 
         return out
@@ -136,11 +190,10 @@ class PyramidGAP(tf.keras.Model):
 
 
 def resblock3x3(in_channels, out_channels):
-    layer = ResBlock(in_channels=in_channels,
-                     out_channels=out_channels,
-                     kernel_size=3,
-                     strides=1,
-                     padding="SAME")
+    layer = ResConv(in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=3,
+                    strides=1)
 
     return layer
 
@@ -181,5 +234,20 @@ def spatial_concat(in_channels, out_channels, index_to_align_size):
 
 def pyramid_gap(in_channels, out_channels):
     layer = PyramidGAP()
+
+    return layer
+
+
+def resmobile3x3(in_channels, out_channels, strides):
+    layer = ResidualMobile(in_channels=in_channels,
+                           out_channels=out_channels,
+                           kernel_size=3,
+                           strides=strides)
+
+    return layer
+
+
+def rescale(in_channels, out_channels, scale, offset):
+    layer = tf.keras.layers.experimental.preprocessing.Rescaling(scale=scale, offset=offset)
 
     return layer

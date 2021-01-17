@@ -8,18 +8,20 @@ from pathlib import Path
 from train.trainer import Trainer
 from train.summary_writer_reid import SummaryWriterReID
 from functools import partial
-# from data.image_augmentation import ImageAugmentation
+from data.image_augmentation import ImageAugmentation
 from pathlib import Path
 from util.io import load_yaml
 from train.optimizer import generate_optimizer
 from model.model_generator import generate_model
+from train.checkpoint_manager import CheckpointManager
 
 
 def generate_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dir_log", type=str, default="../log")
-    parser.add_argument("--path_config", type=Path, default="../config/train/config_train.yaml")
-    parser.add_argument("--path_model_config", type=Path, default="../config/model/model1.yaml")
+    parser.add_argument("--dir_log", type=str)
+    parser.add_argument("--dir_chkpt", type=str)
+    parser.add_argument("--path_config", type=Path)
+    parser.add_argument("--path_model_config", type=Path)
 
     return parser
 
@@ -27,13 +29,12 @@ def generate_parser():
 def train_reid(args):
     cfg = load_yaml(args.path_config)
     dir_log = args.dir_log
+    dir_chkpt = args.dir_chkpt
     custom = True
     os.makedirs(dir_log, exist_ok=True)
+    os.makedirs(dir_chkpt, exist_ok=True)
 
-#    augmentation = ImageAugmentation(img_size=img_size,
-#                                     contrast=0.5,
-#                                     rotation=0.2)
-    augmentation = None
+    augmentation = ImageAugmentation(**cfg.augmentation)
 
     dataset = ReIDDataset(dir_root=cfg.dataset.data[0].dir_root,
                           path_gt=cfg.dataset.data[0].path,
@@ -41,9 +42,7 @@ def train_reid(args):
                           image_size=cfg.dataset.img_size,
                           scale=cfg.dataset.scale,
                           shift=cfg.dataset.shift,
-                          augmentation=augmentation)
-
-    dataset = dataset.dataset
+                          augmentation=augmentation).dataset
 
     config_model = load_yaml(args.path_model_config)
     model = generate_model(config_model.model.type, config_model.model.kwargs)
@@ -53,6 +52,11 @@ def train_reid(args):
                                        interval_to_write_image=cfg.log.interval_to_write_image)
 
     optimizer = generate_optimizer(cfg.optimizer.type, cfg.optimizer.kwargs)
+    chkpt_manager = CheckpointManager(dir_chkpt=dir_chkpt,
+                                      model=model,
+                                      optimizer=optimizer,
+                                      **cfg.chkpt_manager.kwargs)
+    n_iter = chkpt_manager.restore_or_initialize()
 
     if custom:
         trainer = Trainer(epochs=cfg.train.epochs,
@@ -60,7 +64,9 @@ def train_reid(args):
                           model=model,
                           criterion=criterion,
                           optimizer=optimizer,
-                          summary_writer=summary_writer)
+                          summary_writer=summary_writer,
+                          chkpt_manager=chkpt_manager,
+                          start_iter=n_iter)
 
         trainer.train()
     else:
