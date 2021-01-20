@@ -25,6 +25,9 @@ augmentation:
   rotation: 0.05
   p_saturation: 0.2
   saturation: [0.8, 1.2]
+  p_cutout: 0.3
+  cutout_size_rate: [0.05, 0.2]
+  cutout_aspect_rate: [0.5, 2.]
 
 log:
   interval_to_write_image: 1000
