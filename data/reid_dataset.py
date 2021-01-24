@@ -1,11 +1,8 @@
 import tensorflow as tf
-from util.io import load_pickle
-from pathlib import Path
-import matplotlib.pyplot as plt
-import cv2
-from util.bb import draw_bb
 from util.io import load_image
 from data.preprocess import random_crop_and_resize
+from tool.tool_tfrecord import load_tfrecord
+from functools import lru_cache
 
 
 class ImageLoader:
@@ -45,7 +42,7 @@ class ImagePreprocessor:
         self._shift = shift
 
     def __call__(self, data):
-        img = data["img"]
+        img = data["image"]
         bb = data["bb"]
 
         img, _ = random_crop_and_resize(tf.expand_dims(img, axis=0),
@@ -56,15 +53,38 @@ class ImagePreprocessor:
 
         img = img / 255.0
 
-        data["img"] = img[0, :]
+        data["image"] = img[0, :]
 
         return data
 
 
+def set_unique_id(datasets):
+    count = 0
+    new_dataset = []
+    for dataset in datasets:
+        hash_count = {}
+        for data in dataset:
+            label = data["label"]
+            data["label"] += count
+            new_dataset += [data]
+            hash_count[int(label)] = 1
+        count += len(hash_count)
+
+    for data in new_dataset:
+        print(data["label"])
+
+    return new_dataset
+
+
+@lru_cache(maxsize=None)
+def get_dataset_length(dataset):
+    length = sum([1 for _ in dataset])
+    return length
+
+
 class ReIDDataset:
     def __init__(self,
-                 dir_root,
-                 path_gt,
+                 path_tfrecord,
                  batch_size,
                  image_size,
                  scale,
@@ -72,24 +92,16 @@ class ReIDDataset:
                  augmentation):
         self.batch_sie = batch_size
         self.image_size = image_size
-        row_data = DataWrapper(load_pickle(path_gt))
-        self._data_length = len(row_data)
 
-        self._dataset = tf.data.Dataset.from_generator(row_data,
-                                                       output_types={"img_name": tf.string,
-                                                                     "bb": tf.float32,
-                                                                     "label": tf.int64},
-                                                       output_shapes={"img_name": (),
-                                                                      "bb": (4,),
-                                                                      "label": ()})
+        raw_dataset = load_tfrecord(path_tfrecord=path_tfrecord)
 
-        image_loader = ImageLoader(dir_root)
-        self._dataset = self._dataset.map(image_loader, num_parallel_calls=tf.data.AUTOTUNE)
+        self._length_dataset = get_dataset_length(raw_dataset)
+
         image_preprocessor = ImagePreprocessor(image_size=image_size,
                                                scale=scale,
                                                shift=shift)
 
-        self._dataset = self._dataset.map(image_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
+        self._dataset = raw_dataset.map(image_preprocessor, num_parallel_calls=tf.data.AUTOTUNE)
 
         self._dataset = self._dataset.shuffle(buffer_size=len(self))
         self._dataset = self._dataset.batch(batch_size)
@@ -103,5 +115,5 @@ class ReIDDataset:
         return self._dataset
 
     def __len__(self):
-        return self._data_length
+        return self._length_dataset
 
