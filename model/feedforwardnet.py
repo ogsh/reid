@@ -3,8 +3,8 @@ from model.parser import parse_model
 
 
 class FeedforwardNet(tf.keras.Model):
-    def __init__(self, in_channels, config):
-        super(FeedforwardNet, self).__init__()
+    def __init__(self, in_channels, config, *args, **kwargs):
+        super(FeedforwardNet, self).__init__(*args, **kwargs)
 
         self._layer_dict, self._out_channels = parse_model(in_channels=in_channels, config=config)
 

@@ -17,7 +17,7 @@ class SummaryWriterReID:
             tf.summary.scalar("loss", float(loss), step=iter)
 
             if save_image:
-                img = data["img"]
+                img = data["image"]
                 tf.summary.image("image", img, step=iter, max_outputs=32)
                 write_model_weight(model, iter)
 

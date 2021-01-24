@@ -6,7 +6,7 @@ from train.checkpoint_manager import CheckpointManager
 
 def train_each_iteration(data, model, criterion):
     with tf.GradientTape() as tape:
-        inference = model(data["img"])
+        inference = model(data["image"])
         loss_value = criterion(data["label"], inference)
 
     grads = tape.gradient(loss_value, model.trainable_weights)
@@ -22,7 +22,7 @@ class Trainer:
                  criterion,
                  optimizer: tf.keras.optimizers.Optimizer,
                  summary_writer,
-                 chkpt_manager,
+                 chkpt_manager: CheckpointManager,
                  start_iter):
         self._dataset = dataset
         self._model = model

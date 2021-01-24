@@ -3,8 +3,10 @@ train:
 
 chkpt_manager:
   kwargs:
-    max_to_keep: 10
-    interval_to_save: 1000
+    max_to_keep: 3
+    interval_to_save: 100
+  load_layers:
+    - _backbone
 
 dataset:
   img_size: [32, 64]
@@ -12,9 +14,7 @@ dataset:
   scale: 0.1
   shift: 0.
   data:
-    -
-      dir_root: "../dataset/v47"
-      path: "../dataset/v47/v47.pkl"
+    - "../dataset/v47/v47.tfrecords"
 
 augmentation:
   p_contrast: 0.2

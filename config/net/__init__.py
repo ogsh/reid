@@ -15,6 +15,8 @@ def load_net_config(name):
 
 def generate_net(in_channels, name):
     config = load_net_config(name)
-    net = FeedforwardNet(in_channels, config)
+    net = FeedforwardNet(in_channels=in_channels,
+                         config=config,
+                         name=name)
 
     return net

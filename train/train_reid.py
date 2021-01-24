@@ -36,8 +36,7 @@ def train_reid(args):
 
     augmentation = ImageAugmentation(**cfg.augmentation)
 
-    dataset = ReIDDataset(dir_root=cfg.dataset.data[0].dir_root,
-                          path_gt=cfg.dataset.data[0].path,
+    dataset = ReIDDataset(path_tfrecord=cfg.dataset.data,
                           batch_size=cfg.dataset.batch_size,
                           image_size=cfg.dataset.img_size,
                           scale=cfg.dataset.scale,
@@ -56,7 +55,7 @@ def train_reid(args):
                                       model=model,
                                       optimizer=optimizer,
                                       **cfg.chkpt_manager.kwargs)
-    n_iter = chkpt_manager.restore_or_initialize()
+    n_iter = chkpt_manager.restore_or_initialize(load_layers=cfg.chkpt_manager.load_layers)
 
     if custom:
         trainer = Trainer(epochs=cfg.train.epochs,

@@ -14,11 +14,11 @@ def random_scale_shift_bboxes(bboxes, scale, shift):
     ws = bboxes[:, 2:3] - bboxes[:, 0:1]
     hs = bboxes[:, 3:4] - bboxes[:, 1:2]
     sizes = tf.concat([ws, hs], axis=1)
-    scales = power2_radom_uniform(shape=sizes.shape, maxval=scale, minval=-scale)
+    scales = power2_radom_uniform(shape=tf.shape(sizes), maxval=scale, minval=-scale)
     sizes = sizes * scales
 
     centers = tf.concat([cxs, cys], axis=1)
-    shifts = tf.random.uniform(shape=sizes.shape, maxval=shift, minval=-shift)
+    shifts = tf.random.uniform(shape=tf.shape(sizes), maxval=shift, minval=-shift)
     centers += shifts
 
     half_sizes = 0.5 * sizes
